@@ -6,6 +6,7 @@ import re
 
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LOG_DIR = os.path.join(SCRIPT_DIR, 'tmp')
+CONFIG_DIR = os.path.join(SCRIPT_DIR, 'config')
 
 
 def parse_snmp(trap):

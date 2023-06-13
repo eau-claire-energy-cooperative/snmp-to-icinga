@@ -6,11 +6,16 @@ This is a bridge to configure SNMP traps that should be updated in Icinga via a 
 
 This script is meant to work in conjunction with [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html). Having that up and running is a pre-requsite. There are numerous guides depending on your system to get this going.
 
-```
+Once _snmptrapd_ is confirmed working, clone this repo somewhere local on the same system.
 
+```
+git clone https://github.com/eau-claire-energy-cooperative/snmp-to-icinga.git
 sudo pip3 install .
 
 ```
+
+Once built you can setup one of the two scripts as a trap handler.
+
 ## Usage
 
 ### SNMP Logging
@@ -21,4 +26,4 @@ If you just want to log SNMP traps to a file for review this can be done by sett
 
 ```
 
-Once setup the script will take any traps forwarded and log the time, sender IP, OID, and trap value to a log file. This is useful for if you want to test if a trap is coming through and what the payload values actually are. This can help determine the rules for configuring the Icinga service. 
+Once setup the script will take any traps forwarded and log the time, sender IP, OID, and trap value to a log file. This is useful for if you want to test if a trap is coming through and what the payload values actually are. This can help determine the rules for configuring the Icinga service.
