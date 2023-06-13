@@ -11,3 +11,14 @@ This script is meant to work in conjunction with [snmptrapd](https://net-snmp.so
 sudo pip3 install .
 
 ```
+## Usage
+
+### SNMP Logging
+
+If you just want to log SNMP traps to a file for review this can be done by setting up the `snmplog.py` file as a trap handler. Below is an example for the `snmptrapd.conf` file.
+
+```
+
+```
+
+Once setup the script will take any traps forwarded and log the time, sender IP, OID, and trap value to a log file. This is useful for if you want to test if a trap is coming through and what the payload values actually are. This can help determine the rules for configuring the Icinga service. 
