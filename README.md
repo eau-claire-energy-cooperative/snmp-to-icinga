@@ -5,3 +5,9 @@ This is a bridge to configure SNMP traps that should be updated in Icinga via a 
 ## Install
 
 This script is meant to work in conjunction with [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html). Having that up and running is a pre-requsite. There are numerous guides depending on your system to get this going.
+
+```
+
+sudo pip3 install .
+
+```
