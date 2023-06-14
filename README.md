@@ -1,12 +1,33 @@
 # SNMP To Icinga
 
-This is a bridge to configure SNMP traps that should be updated in Icinga via a passive check. This is meant to be highly configurable and work multiple types of SNMP traps without writing custom handlers for them all.
+This is a bridge to configure SNMP traps sent from [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html) that should be updated in [Icinga](https://icinga.com/) via a passive check. This is meant to be highly configurable and work with multiple types of SNMP traps without writing custom handlers for them all.
+
+## Table Of Contents
+
+- [Background](#background)
+- [Install](#install)
+- [Usage](#usage)
+  - [SNMP Logging](#snmp-logging)
+  - [SNMP To Icinga](#snmp-to-icinga)
+- [Config File](#config-file)
+  - [Trap Parsing](#trap-parsing)
+  - [Return Codes](#return-codes)
+  - [Other Output](#other-output)
+- [License](#license)
+
+## Background
+
+[Icinga](https://icinga.com/) is a monitoring tool, similar to Nagios, that can perform both active and passive checks on hosts and services. Active checks are initiated from the Icinga daemon and return a response code (OK, WARNING, CRTICIAL, or UNKNOWN). Passive checks send data to Icinga from an external script or trigger. For backwards compatibility Icinga uses the same return codes and outputs as Nagios so many of the same scripts are interchangeable.
+
+One common method of getting information from a remote host is to use [SNMP](https://en.wikipedia.org/wiki/Simple_Network_Management_Protocol). SNMP can be queried via an active service check. It also has the ability, on some devices, to send notifications (SNMP Traps) to a remote host. Icinga cannot parse this trap information natively on it's own but it does have a web service capable of receiving passive check info in the proper format.
+
+This script is an attempt to create a bridge, taking the SNMP Trap information and creating the payload Icinga needs for a service check. This is done by registering the script as a trap handler for __snmptrapd__ and intercepting the trap data. A config file is used to determine how to map the SNMP OID and it's payload to valid Icinga return code values. Multiple traps can be defined so one trap handler can handle multiple service checks.
 
 ## Install
 
-This script is meant to work in conjunction with [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html). Having that up and running is a pre-requsite. There are numerous guides depending on your system to get this going.
+This script is meant to work in conjunction with [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html) and Icinga. Having those up and running is a prerequisite. There are numerous guides depending on your system to get this going. In Icinga you must also create an [API user](https://icinga.com/docs/icinga-2/latest/doc/09-object-types/#apiuser) with permissions to process check results via the API.
 
-Once _snmptrapd_ is confirmed working, clone this repo somewhere local on the same system.
+Once you're ready, clone this repo somewhere local on the __same system as snmptrapd__.
 
 ```
 git clone https://github.com/eau-claire-energy-cooperative/snmp-to-icinga.git
@@ -23,10 +44,10 @@ Once built you can setup one of the two scripts as a trap handler.
 If you just want to log SNMP traps to a file for review this can be done by setting up the `snmplog.py` file as a trap handler. Below is an example for the `snmptrapd.conf` file.
 
 ```
-
+traphandle default /usr/bin/python3 /home/user/Git/snmp-to-icinga/src/snmplog.py
 ```
 
-Once setup the script will take any traps forwarded and log the time, sender IP, OID, and trap value to a log file. This is useful for if you want to test if a trap is coming through and what the payload values actually are. This can help determine the rules for configuring the Icinga service.
+Once setup the script will take any traps forwarded and log the time, sender IP, OID, and trap value to a log file located in `tmp/snmp.log`. This is useful for if you want to test if a trap is coming through and what the payload values actually are. This can help determine the rules for configuring the Icinga service.
 
 ### SNMP To Icinga
 
@@ -36,17 +57,39 @@ To setup the full SNMP trap to Icinga integration you will need to:
 2. Generate a config file that contains the SNMP trap and Icinga information needed to parse the trap and return the service status.
 
 ```
-
+traphandle default /usr/bin/python3 /home/user/Git/snmp-to-icinga/src/snmpicinga.py --config demo.yaml
 ```
 
-Once configured the script will load the config file and match the sender and OID to one of the configured values. If one can't be found the script exists. The SNMP payload is parsed according to the directives so that an OK, WARNING, CRITICAL, or UNKNOWN status can be sent to Icinga.
+Once configured the script will load the config file and match the sender and OID to one of the configured values. If one can't be found the script exits. The SNMP payload is parsed according to the directives so that an OK, WARNING, CRITICAL, or UNKNOWN status can be sent to Icinga.
 
 ## Config File
 
 A YAML configuration file must be created that contains the Icinga and SNMP trap information. Multiple SNMP traps can be defined in the same file.
 
 ```
-
+# your icinga service information, including the API user
+icinga:
+  ip: 127.0.0.1
+  username: api_user
+  password: api_pass
+# define each of the traps below
+traps:
+  - name: "Test SNMP"
+    # the SNMP sender and OID information
+    snmp:
+      host: 192.168.1.100
+      oid: iso.3.6.1.4.1.8072.2.3.2.1
+      payload_type: value
+    # how to convert the trap to an icinga service
+    icinga:
+      host: garage_rack_door_sensor
+      service: check_rack_door
+      # plugin output is optional
+      plugin_output: "The payload is: {{ payload }}"
+      return_code:
+        ok: {{ payload | int == 1 }}
+        warning: {{ payload | int == 2 }}
+        critical: {{ payload | int == 3 }}
 ```
 
 The configuration file will be validated at runtime to make sure it is valid. You can test this manually by adding the `--test` flag.
@@ -61,7 +104,7 @@ Trap parsing can be done by specifying the `payload_type`. This can be either a 
 
 ### Return Codes
 
-Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by evaluating the SNMP payload. In the __return_codes__ section of the configuration file are specified the rules for evaluating each return type. These are processed in order from OK to CRITICAL. The OK type is required but WARNING and CRITICAL return types are optional. Using Jinja syntax each statement must evaluate to a true/false value. Returning `True` means that this return value will be sent to Icinga. If no statement is found to be True, then an UNKNOWN return code is given.
+Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by evaluating the SNMP payload. In the __return_codes__ section of the configuration file are specified the rules for evaluating each return type. These are processed in order from OK to CRITICAL. The OK type is required but WARNING and CRITICAL return types are optional. Using [Jinja syntax](https://jinja.palletsprojects.com/en/2.10.x/templates/) each statement must evaluate to a true/false value. Returning `True` means that this return value will be sent to Icinga. If no statement is found to be True, then an UNKNOWN return code is given.
 
 The SNMP payload is available as a variable called `payload`. For CSV type payloads you can access each with array notation (`payload[0]`). For JSON type payloads you can use JSON notation (`payload['key']`).
 
@@ -90,4 +133,8 @@ ok: >-
 
 By default the raw SNMP payload data is also sent to Icinga as a string as the _plugin output_ information. You can format this output in a template as well by specifying a `plugin_output` value in the config file.
 
-Similarly _performance data_ can also be sent by specifying a `performance_data` template. Keep in mind that performance data must conform to the [Nagios standard](https://nagios-plugins.org/doc/guidelines.html#PLUGOUTPUT) in order for it to work correctly in Icinga. 
+Similarly _performance data_ can also be sent by specifying a `performance_data` template. Keep in mind that performance data must conform to the [Nagios standard](https://nagios-plugins.org/doc/guidelines.html#PLUGOUTPUT) in order for it to work correctly in Icinga.
+
+## License
+
+[GPLv3](https://github.com/eau-claire-energy-cooperative/snmp-to-icinga.git)
