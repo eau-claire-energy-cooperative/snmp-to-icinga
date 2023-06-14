@@ -1,4 +1,5 @@
 import argparse
+import json
 import os.path
 import requests
 import sys
@@ -36,7 +37,19 @@ def send_to_icinga(host, service, trap):
         print("error with request")
 
 def parse_payload(payload, type='value'):
-    return payload
+    result = payload  # for value types just return payload
+
+    if(type == 'csv'):
+        # break on commas into an array
+        result = payload.split(',')
+
+        # do a little cleanup on the values
+        result = list(map(lambda v: v.strip().replace('"',''), result))
+
+    elif(type == 'json'):
+        result = json.loads(payload)
+
+    return result
 
 def find_trap_definition(trap_info, traps):
     # go through all the traps until we find a match
@@ -76,8 +89,7 @@ if(args.test):
     sys.exit(0)
 
 # parse the trap
-#trap_snmp = utils.parse_snmp(sys.stdin.readlines())
-trap_snmp = utils.parse_snmp(['sensorgateway.ecec.local\n', 'UDP: [10.10.10.176]:65534->[10.10.10.35]:162\n', 'iso.3.6.1.2.1.1.3.0 0:1:37:20.03\n', 'iso.3.6.1.6.3.1.1.4.1.0 iso.3.6.1.2.1.1.2\n', 'iso.3.6.1.4.1.17095.4.2.0 "Security1,TRIG,DOWN,01 January 2021,01:37:20"\n'])
+trap_snmp = utils.parse_snmp(sys.stdin.readlines())
 
 # check if we have a match
 trap_config = find_trap_definition(trap_snmp, config['traps'])

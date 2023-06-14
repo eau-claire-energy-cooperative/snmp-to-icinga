@@ -57,7 +57,7 @@ python3 snmptoicinga.py --config config.yaml --test
 
 ### Trap Parsing
 
-Trap parsing can be done by specifying the `payload_type`. This can be either a single `value`, a `json` payload, or a `csv` payload. Normal values are returned as is. JSON values are parsed with `json.dumps` and CSV values are converted to an array.
+Trap parsing can be done by specifying the `payload_type`. This can be either a single `value`, a `json` payload, or a `csv` payload. Normal values are returned as is. JSON values are parsed with `json.loads` and CSV values are converted to an array.
 
 ### Return Codes
 
