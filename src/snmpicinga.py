@@ -20,10 +20,10 @@ def send_to_icinga(host, service, trap):
     url = f"https://{config['icinga']['ip']}:5665/v1/actions/process-check-result"
     basic = HTTPBasicAuth(config['icinga']['username'], config['icinga']['password'])
 
-    # data payload
+    # data payload - https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#process-check-result
     data = {"type": "Service", "filter": f"host.name==\"{host}\" && service.name==\"{service}\"",
-            "exit_status": trap['return_value'], "plugin_output": trap['payload'],
-            "check_source": "spiderman", "pretty": True }
+            "exit_status": trap['return_value'], "plugin_output": trap['plugin_output'],
+            'performance_data': trap['performance_data'], "pretty": False }
 
     try:
         r = requests.post(url, headers={"Accept":"application/json"}, auth=basic, json=data, verify=False)
@@ -125,6 +125,18 @@ if(trap_config is not None):
         trap_snmp['return_value'] = 2
     else:
         trap_snmp['return_value'] = 3
+
+    # set the plugin output from template, if given, otherwise raw payload
+    if('plugin_output' in trap_config['icinga']):
+        trap_snmp['plugin_output'] = render_template(jinja_env, trap_config['icinga']['plugin_output'], parsed_payload, return_bool=False)
+    else:
+        trap_snmp['plugin_output'] = trap_snmp['payload']
+
+    # finally evaluate the performance data
+    if('performance_data' in trap_config['icinga']):
+        trap_snmp['performance_data'] = render_template(jinja_env, trap_config['icinga']['performance_data'], parsed_payload, return_bool=False)
+    else:
+        trap_snmp['performance_data'] = ""
 
     # send to icinga
     send_to_icinga(trap_config['icinga']['host'], trap_config['icinga']['service'], trap_snmp)

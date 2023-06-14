@@ -85,3 +85,9 @@ ok: >-
     False
   {% endif %}
 ```
+
+### Other Output
+
+By default the raw SNMP payload data is also sent to Icinga as a string as the _plugin output_ information. You can format this output in a template as well by specifying a `plugin_output` value in the config file.
+
+Similarly _performance data_ can also be sent by specifying a `performance_data` template. Keep in mind that performance data must conform to the [Nagios standard](https://nagios-plugins.org/doc/guidelines.html#PLUGOUTPUT) in order for it to work correctly in Icinga. 

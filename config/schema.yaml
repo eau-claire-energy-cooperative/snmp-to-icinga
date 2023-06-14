@@ -49,6 +49,12 @@ traps:
           service:
             required: True
             type: string
+          plugin_output:
+            required: False
+            type: string
+          performance_data:
+            required: False
+            type: string
           return_code:
             required: True
             type: dict
