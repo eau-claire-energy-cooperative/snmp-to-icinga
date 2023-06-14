@@ -8,6 +8,7 @@ SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LOG_DIR = os.path.join(SCRIPT_DIR, 'tmp')
 CONFIG_DIR = os.path.join(SCRIPT_DIR, 'config')
 
+RETURN_CODES = {"OK": 0, "WARNING": 1, "CRITICAL": 2, "UNKNOWN": 3}
 
 def parse_snmp(trap):
     """

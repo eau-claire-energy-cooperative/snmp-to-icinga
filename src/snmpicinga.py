@@ -118,13 +118,13 @@ if(trap_config is not None):
 
     # render return code starting with ok
     if(render_template(jinja_env, return_codes['ok'], parsed_payload)):
-        trap_snmp['return_value'] = 0
+        trap_snmp['return_value'] = utils.RETURN_CODES['OK']
     elif(render_template(jinja_env, return_codes['warning'], parsed_payload)):
-        trap_snmp['return_value'] = 1
+        trap_snmp['return_value'] = utils.RETURN_CODES['WARNING']
     elif(render_template(jinja_env, return_codes['critical'], parsed_payload)):
-        trap_snmp['return_value'] = 2
+        trap_snmp['return_value'] = utils.RETURN_CODES['CRITICAL']
     else:
-        trap_snmp['return_value'] = 3
+        trap_snmp['return_value'] = utils.RETURN_CODES['UNKNOWN']
 
     # set the plugin output from template, if given, otherwise raw payload
     if('plugin_output' in trap_config['icinga']):
