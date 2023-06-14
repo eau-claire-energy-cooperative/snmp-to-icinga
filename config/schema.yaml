@@ -1,0 +1,65 @@
+icinga:
+  required: True
+  type: dict
+  schema:
+    ip:
+      required: True
+      type: string
+    username:
+      required: True
+      type: string
+    password:
+      required: True
+      type: string
+traps:
+  required: True
+  type: list
+  minlength: 1
+  schema:
+    type: dict
+    schema:
+      name:
+        required: True
+        type: string
+      snmp:
+        required: True
+        type: dict
+        default:
+          payload_type: value
+        schema:
+          host:
+            required: True
+            type: string
+          oid:
+            required: True
+            type: string
+          payload_type:
+            required: False
+            type: string
+            allowed:
+              - value
+              - json
+              - csv
+      icinga:
+        required: True
+        type: dict
+        schema:
+          host:
+            required: True
+            type: string
+          service:
+            required: True
+            type: string
+          return_code:
+            required: True
+            type: dict
+            schema:
+              ok:
+                required: True
+                type: string
+              warning:
+                required: True
+                type: string
+              critical:
+                required: True
+                type: string

@@ -4,6 +4,7 @@ import requests
 import sys
 import yaml
 import utils as utils
+from cerberus import Validator
 from requests.auth import HTTPBasicAuth
 from requests.packages.urllib3.exceptions import InsecureRequestWarning,InsecurePlatformWarning,SNIMissingWarning
 
@@ -25,6 +26,7 @@ def send_to_icinga(host, service, trap):
     try:
         r = requests.post(url, headers={"Accept":"application/json"}, auth=basic, json=data, verify=False)
 
+        # get the results as a dict
         if(r.ok):
             results = r.json()
             print(results['results'][0]['status'])
@@ -44,17 +46,38 @@ def find_trap_definition(trap_info, traps):
 
     return None
 
+def validate_schema():
+    with open(os.path.join(utils.CONFIG_DIR, 'schema.yaml'), 'r') as file:
+        schema = yaml.safe_load(file)
+
+    v = Validator(schema)
+    if(not v.validate(config, schema)):
+        print("Error - configuration file syntax is invalid")
+        print(str(v.errors))
+        sys.exit(2)
+
 parser = argparse.ArgumentParser(description='SNMP to Icinga')
 parser.add_argument('-c', '--config', default="config.yaml",
                     help='Path to YAML config file')
+parser.add_argument('-t', "--test", action='store_true',
+                    help="Validate the config file and exit")
 args = parser.parse_args()
 
 # load the yaml config file
 with open(os.path.join(utils.CONFIG_DIR, args.config), 'r') as file:
     config = yaml.safe_load(file)
 
+# validate the config file
+validate_schema()
+
+if(args.test):
+    # exit after this
+    print("Configuration file is valid")
+    sys.exit(0)
+
 # parse the trap
-trap_snmp = utils.parse_snmp(sys.stdin.readlines())
+#trap_snmp = utils.parse_snmp(sys.stdin.readlines())
+trap_snmp = utils.parse_snmp(['sensorgateway.ecec.local\n', 'UDP: [10.10.10.176]:65534->[10.10.10.35]:162\n', 'iso.3.6.1.2.1.1.3.0 0:1:37:20.03\n', 'iso.3.6.1.6.3.1.1.4.1.0 iso.3.6.1.2.1.1.2\n', 'iso.3.6.1.4.1.17095.4.2.0 "Security1,TRIG,DOWN,01 January 2021,01:37:20"\n'])
 
 # check if we have a match
 trap_config = find_trap_definition(trap_snmp, config['traps'])
@@ -64,11 +87,13 @@ if(trap_config is not None):
     # convert the trap payload based on the type
     parsed_payload = parse_payload(trap_snmp['payload'], trap_config['snmp']['payload_type'])
 
-    if(parsed_payload == trap_config['icinga']['ok_value']):
+    return_codes = trap_config['icinga']['return_code']
+
+    if(parsed_payload == return_codes['ok']):
         trap_snmp['return_value'] = 0
-    elif(parsed_payload == trap_config['icinga']['warning_value']):
+    elif(parsed_payload == return_codes['warning']):
         trap_snmp['return_value'] = 1
-    elif(parsed_payload == trap_config['icinga']['critical_value']):
+    elif(parsed_payload == return_codes['critical']):
         trap_snmp['return_value'] = 2
     else:
         trap_snmp['return_value'] = 3
