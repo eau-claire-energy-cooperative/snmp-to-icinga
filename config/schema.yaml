@@ -24,8 +24,6 @@ traps:
       snmp:
         required: True
         type: dict
-        default:
-          payload_type: value
         schema:
           host:
             required: True
@@ -36,6 +34,7 @@ traps:
           payload_type:
             required: False
             type: string
+            default: 'value'
             allowed:
               - value
               - json
@@ -58,8 +57,10 @@ traps:
                 required: True
                 type: string
               warning:
-                required: True
+                required: False
+                default: 'False'
                 type: string
               critical:
-                required: True
+                required: False
+                default: 'False'
                 type: string

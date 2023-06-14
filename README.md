@@ -61,4 +61,27 @@ Trap parsing can be done by specifying the `payload_type`. This can be either a 
 
 ### Return Codes
 
-Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by parsing the SNMP payload.  
+Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by evaluating the SNMP payload. In the __return_codes__ section of the configuration file are specified the rules for evaluating each return type. These are processed in order from OK to CRITICAL. The OK type is required but WARNING and CRITICAL return types are optional. Using Jinja syntax each statement must evaluate to a true/false value. Returning `True` means that this return value will be sent to Icinga. If no statement is found to be True, then an UNKNOWN return code is given.
+
+The SNMP payload is available as a variable called `payload`. For CSV type payloads you can access each with array notation (`payload[0]`). For JSON type payloads you can use JSON notation (`payload['key']`).
+
+A few examples:
+
+```
+# simple condition evaluation
+ok: "{{ payload == 'value' }}"
+
+# more complicated CSV payload
+ok: "{{ payload[1] == 'value' }}"
+
+# advanced jinja evaluation using JSON payload
+# here different values equal True based on the name of the sensor
+ok: >-
+  {% if payload['sensor'] == 'sensor 1' %}
+    {{ payload['sensor_value'] == 'OK' }}
+  {% elif payload['sensor'] == 'sensor 2' %}
+    {{ payload['sensor_value'] == 'NOT OK' }}
+  {% else %}
+    False
+  {% endif %}
+```

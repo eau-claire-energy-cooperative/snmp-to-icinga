@@ -71,15 +71,21 @@ def render_template(jinja_env, template_string, payload, return_bool=True):
     else:
         return result
 
-def validate_schema():
+def load_config_file(config_file):
     with open(os.path.join(utils.CONFIG_DIR, 'schema.yaml'), 'r') as file:
         schema = yaml.safe_load(file)
 
+    # load the yaml config file
+    with open(os.path.join(utils.CONFIG_DIR, config_file), 'r') as file:
+        c = yaml.safe_load(file)
+
     v = Validator(schema)
-    if(not v.validate(config, schema)):
+    if(not v.validate(c, schema)):
         print("Error - configuration file syntax is invalid")
         print(str(v.errors))
         sys.exit(2)
+
+    return v.normalized(c)
 
 parser = argparse.ArgumentParser(description='SNMP to Icinga')
 parser.add_argument('-c', '--config', default="config.yaml",
@@ -88,12 +94,8 @@ parser.add_argument('-t', "--test", action='store_true',
                     help="Validate the config file and exit")
 args = parser.parse_args()
 
-# load the yaml config file
-with open(os.path.join(utils.CONFIG_DIR, args.config), 'r') as file:
-    config = yaml.safe_load(file)
-
-# validate the config file
-validate_schema()
+# load and validate the config file
+config = load_config_file(args.config)
 
 if(args.test):
     # exit after this
