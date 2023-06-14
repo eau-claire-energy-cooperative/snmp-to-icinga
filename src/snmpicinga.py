@@ -1,4 +1,5 @@
 import argparse
+import jinja2
 import json
 import os.path
 import requests
@@ -59,6 +60,17 @@ def find_trap_definition(trap_info, traps):
 
     return None
 
+def render_template(jinja_env, template_string, payload, return_bool=True):
+    # evaulate the template and return the result
+    template = jinja_env.from_string(template_string)
+    result = template.render(payload=parsed_payload)
+
+    if(return_bool):
+        # jinja returns True/False string
+        return result.lower() == 'true'
+    else:
+        return result
+
 def validate_schema():
     with open(os.path.join(utils.CONFIG_DIR, 'schema.yaml'), 'r') as file:
         schema = yaml.safe_load(file)
@@ -100,12 +112,14 @@ if(trap_config is not None):
     parsed_payload = parse_payload(trap_snmp['payload'], trap_config['snmp']['payload_type'])
 
     return_codes = trap_config['icinga']['return_code']
+    jinja_env = jinja2.Environment()
 
-    if(parsed_payload == return_codes['ok']):
+    # render return code starting with ok
+    if(render_template(jinja_env, return_codes['ok'], parsed_payload)):
         trap_snmp['return_value'] = 0
-    elif(parsed_payload == return_codes['warning']):
+    elif(render_template(jinja_env, return_codes['warning'], parsed_payload)):
         trap_snmp['return_value'] = 1
-    elif(parsed_payload == return_codes['critical']):
+    elif(render_template(jinja_env, return_codes['critical'], parsed_payload)):
         trap_snmp['return_value'] = 2
     else:
         trap_snmp['return_value'] = 3
