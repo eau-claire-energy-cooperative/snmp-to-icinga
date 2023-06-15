@@ -10,6 +10,7 @@ CONFIG_DIR = os.path.join(SCRIPT_DIR, 'config')
 
 RETURN_CODES = {"OK": 0, "WARNING": 1, "CRITICAL": 2, "UNKNOWN": 3}
 
+
 def parse_snmp(trap):
     """
     parse raw snmp trap data into a useable format
@@ -21,10 +22,10 @@ def parse_snmp(trap):
     payload = str(trap[len(trap) - 1]).strip()
 
     # get the sender's IP (first match)
-    sender = re.search('((\d+)\.){3}(\d+)', network_info).group()
+    sender = re.search('((\d+)\.){3}(\d+)', network_info).group()  # noqa: W605
 
     # find the oid
-    oid = re.search('iso(\.([\d]{0,}))+', payload).group()
+    oid = re.search('iso(\.([\d]{0,}))+', payload).group()  # noqa: W605
     payload = payload[len(oid) + 1:]
 
     return {"sender_ip": sender, "oid": oid, "payload": payload}

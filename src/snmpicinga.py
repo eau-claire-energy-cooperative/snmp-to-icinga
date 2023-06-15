@@ -8,12 +8,13 @@ import yaml
 import utils as utils
 from cerberus import Validator
 from requests.auth import HTTPBasicAuth
-from requests.packages.urllib3.exceptions import InsecureRequestWarning,InsecurePlatformWarning,SNIMissingWarning
+from requests.packages.urllib3.exceptions import InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning
 
 config = None  # yaml config file
 
-#disable insecure request warnings
-requests.packages.urllib3.disable_warnings((InsecureRequestWarning,InsecurePlatformWarning,SNIMissingWarning))
+# disable insecure request warnings
+requests.packages.urllib3.disable_warnings((InsecureRequestWarning, InsecurePlatformWarning, SNIMissingWarning))
+
 
 def send_to_icinga(host, service, trap):
     # setup the url and basic http auth
@@ -23,10 +24,10 @@ def send_to_icinga(host, service, trap):
     # data payload - https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#process-check-result
     data = {"type": "Service", "filter": f"host.name==\"{host}\" && service.name==\"{service}\"",
             "exit_status": trap['return_value'], "plugin_output": trap['plugin_output'],
-            'performance_data': trap['performance_data'], "pretty": False }
+            'performance_data': trap['performance_data'], "pretty": False}
 
     try:
-        r = requests.post(url, headers={"Accept":"application/json"}, auth=basic, json=data, verify=False)
+        r = requests.post(url, headers={"Accept": "application/json"}, auth=basic, json=data, verify=False)
 
         # get the results as a dict
         if(r.ok):
@@ -34,8 +35,9 @@ def send_to_icinga(host, service, trap):
             print(results['results'][0]['status'])
         else:
             print("error with http")
-    except:
+    except Exception:
         print("error with request")
+
 
 def parse_payload(payload, type='value'):
     result = payload  # for value types just return payload
@@ -45,12 +47,13 @@ def parse_payload(payload, type='value'):
         result = payload.split(',')
 
         # do a little cleanup on the values
-        result = list(map(lambda v: v.strip().replace('"',''), result))
+        result = list(map(lambda v: v.strip().replace('"', ''), result))
 
     elif(type == 'json'):
         result = json.loads(payload)
 
     return result
+
 
 def find_trap_definition(trap_info, traps):
     # go through all the traps until we find a match
@@ -59,6 +62,7 @@ def find_trap_definition(trap_info, traps):
             return t
 
     return None
+
 
 def render_template(jinja_env, template_string, payload, return_bool=True):
     # evaulate the template and return the result
@@ -70,6 +74,7 @@ def render_template(jinja_env, template_string, payload, return_bool=True):
         return result.lower() == 'true'
     else:
         return result
+
 
 def load_config_file(config_file):
     with open(os.path.join(utils.CONFIG_DIR, 'schema.yaml'), 'r') as file:
@@ -87,6 +92,8 @@ def load_config_file(config_file):
 
     return v.normalized(c)
 
+
+# parse CLI arguments
 parser = argparse.ArgumentParser(description='SNMP to Icinga')
 parser.add_argument('-c', '--config', default="config.yaml",
                     help='Path to YAML config file')

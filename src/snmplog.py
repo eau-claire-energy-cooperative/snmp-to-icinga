@@ -20,4 +20,4 @@ trap = utils.parse_snmp(sys.stdin.readlines())
 # write to the log file - format is DATE [IP] OID: PAYLOAD
 now = datetime.now()
 with open(os.path.join(utils.LOG_DIR, 'snmp.log'), 'a') as log_file:
-  log_file.write(f"{now.strftime('%m-%d-%Y %H:%M:%S')} [{trap['sender_ip']}] OID {trap['oid']}: {trap['payload']}\n")
+    log_file.write(f"{now.strftime('%m-%d-%Y %H:%M:%S')} [{trap['sender_ip']}] OID {trap['oid']}: {trap['payload']}\n")
