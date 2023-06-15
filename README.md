@@ -1,6 +1,6 @@
 # SNMP To Icinga
 
-This is a bridge to configure SNMP traps sent from [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html) that should be updated in [Icinga](https://icinga.com/) via a passive check. This is meant to be highly configurable and work with multiple types of SNMP traps without writing custom handlers for them all.
+This is a bridge to configure SNMP traps sent from [snmptrapd](https://net-snmp.sourceforge.io/docs/man/snmptrapd.html) so they can update [Icinga](https://icinga.com/) services via a passive check. This is meant to be highly configurable and work with multiple types of SNMP traps without writing custom handlers for them all.
 
 ## Table Of Contents
 
@@ -64,7 +64,7 @@ Once configured the script will load the config file and match the sender and OI
 
 ## Config File
 
-A YAML configuration file must be created that contains the Icinga and SNMP trap information. Multiple SNMP traps can be defined in the same file.
+A YAML configuration file must be created that contains the Icinga and SNMP trap information. The script looks for config files in the `config` directory, specifying a different absolute path will not work. Multiple SNMP traps can be defined in the same file.
 
 ```
 # your icinga service information, including the API user
@@ -84,7 +84,7 @@ traps:
     icinga:
       host: garage_rack_door_sensor
       service: check_rack_door
-      # plugin output is optional
+      # Icinga plugin output is optional
       plugin_output: "The payload is: {{ payload }}"
       return_code:
         ok: {{ payload | int == 1 }}
@@ -100,19 +100,26 @@ python3 snmptoicinga.py --config config.yaml --test
 
 ### Trap Parsing
 
-Trap parsing can be done by specifying the `payload_type`. This can be either a single `value`, a `json` payload, or a `csv` payload. Normal values are returned as is. JSON values are parsed with `json.loads` and CSV values are converted to an array.
+The SNMP payload is just a text string by default. Trap parsing can help turn this into a more useful data structure via the `payload_type` attribute. Payloads are stored for use later in the `payload` variable (see [return codes](#return-codes)). Supported values are:
+
+* __value__ - this passes through the raw SNMP trap value
+* __csv__ - parses the value into an array, splitting on commas like a CSV. This turns `Value1, Value2, Value3` into an array `['Value1', 'Value2', 'Value3']`.
+* __json__ - parses the payload as JSON. This would turn the string `{"value1": 4, "value2": [1,2,3]}` into a [Python dict](https://docs.python.org/3/tutorial/datastructures.html#dictionaries) you can access directly.
 
 ### Return Codes
 
-Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by evaluating the SNMP payload. In the __return_codes__ section of the configuration file are specified the rules for evaluating each return type. These are processed in order from OK to CRITICAL. The OK type is required but WARNING and CRITICAL return types are optional. Using [Jinja syntax](https://jinja.palletsprojects.com/en/2.10.x/templates/) each statement must evaluate to a true/false value. Returning `True` means that this return value will be sent to Icinga. If no statement is found to be True, then an UNKNOWN return code is given.
+Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by evaluating the SNMP payload. In the __return_codes__ section of the configuration file are specified the rules for evaluating each return type. These are processed in order from OK to CRITICAL. The OK type is required but WARNING and CRITICAL return types are optional. Using [Jinja syntax](https://jinja.palletsprojects.com/en/3.1.x/templates/) each statement must evaluate to a true/false value. Returning `True` means that this return value will be sent to Icinga. If no statement is found to be True, then an UNKNOWN return code is given.
 
-The SNMP payload is available as a variable called `payload`. For CSV type payloads you can access each with array notation (`payload[0]`). For JSON type payloads you can use JSON notation (`payload['key']`).
+The SNMP payload is available as a variable called `payload`. For CSV type payloads you can access each with array notation (`payload[0]`). For JSON type payloads you can use dict notation (`payload['key']`).
 
 A few examples:
 
 ```
 # simple condition evaluation
 ok: "{{ payload == 'value' }}"
+
+# comparing to an integer
+ok: "{{ payload | int == 123 }}"
 
 # more complicated CSV payload
 ok: "{{ payload[1] == 'value' }}"
@@ -131,7 +138,7 @@ ok: >-
 
 ### Other Output
 
-By default the raw SNMP payload data is also sent to Icinga as a string as the _plugin output_ information. You can format this output in a template as well by specifying a `plugin_output` value in the config file.
+By default the raw SNMP payload data is also sent to Icinga as a string in the _plugin output_ information. You can format this output in a template as well by specifying a `plugin_output` value in the config file.
 
 Similarly _performance data_ can also be sent by specifying a `performance_data` template. Keep in mind that performance data must conform to the [Nagios standard](https://nagios-plugins.org/doc/guidelines.html#PLUGOUTPUT) in order for it to work correctly in Icinga.
 
