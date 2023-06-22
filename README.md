@@ -67,11 +67,12 @@ Once configured the script will load the config file and match the sender and OI
 A YAML configuration file must be created that contains the Icinga and SNMP trap information. The script looks for config files in the `config` directory, specifying a different absolute path will not work. Multiple SNMP traps can be defined in the same file.
 
 ```
-# your icinga service information, including the API user
+# your icinga service information, including the API user and check source. 
 icinga:
   ip: 127.0.0.1
   username: api_user
   password: api_pass
+  check_source: source_name
 # define each of the traps below
 traps:
   - name: "Test SNMP"
