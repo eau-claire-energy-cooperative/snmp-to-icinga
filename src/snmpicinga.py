@@ -24,7 +24,8 @@ def send_to_icinga(host, service, trap):
     # data payload - https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#process-check-result
     data = {"type": "Service", "filter": f"host.name==\"{host}\" && service.name==\"{service}\"",
             "exit_status": trap['return_value'], "plugin_output": trap['plugin_output'],
-            'performance_data': trap['performance_data'], "pretty": False}
+            'performance_data': trap['performance_data'], "check_source": config['icinga']['check_source'],
+            "pretty": False}
 
     try:
         r = requests.post(url, headers={"Accept": "application/json"}, auth=basic, json=data, verify=False)

@@ -11,6 +11,10 @@ icinga:
     password:
       required: True
       type: string
+    check_source:
+      required: False
+      type: string
+      default: 'localhost'
 traps:
   required: True
   type: list
