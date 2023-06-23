@@ -98,14 +98,14 @@ def load_config_file(config_file):
 parser = argparse.ArgumentParser(description='SNMP to Icinga')
 parser.add_argument('-c', '--config', default="config.yaml",
                     help='Path to YAML config file')
-parser.add_argument('-t', "--test", action='store_true',
+parser.add_argument('-V', "--validate", action='store_true',
                     help="Validate the config file and exit")
 args = parser.parse_args()
 
 # load and validate the config file
 config = load_config_file(args.config)
 
-if(args.test):
+if(args.validate):
     # exit after this
     print("Configuration file is valid")
     sys.exit(0)

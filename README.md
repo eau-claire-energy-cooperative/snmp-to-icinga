@@ -67,7 +67,7 @@ Once configured the script will load the config file and match the sender and OI
 A YAML configuration file must be created that contains the Icinga and SNMP trap information. The script looks for config files in the `config` directory, specifying a different absolute path will not work. Multiple SNMP traps can be defined in the same file.
 
 ```
-# your icinga service information, including the API user and check source. 
+# your icinga service information, including the API user and check source.
 icinga:
   ip: 127.0.0.1
   username: api_user
@@ -93,10 +93,10 @@ traps:
         critical: {{ payload | int == 3 }}
 ```
 
-The configuration file will be validated at runtime to make sure it is valid. You can test this manually by adding the `--test` flag.
+The configuration file will be validated at runtime to make sure it is valid. You can confirm this manually by adding the `--validate` flag.
 
 ```
-python3 snmptoicinga.py --config config.yaml --test
+python3 snmptoicinga.py --config config.yaml --validate
 ```
 
 ### Trap Parsing
