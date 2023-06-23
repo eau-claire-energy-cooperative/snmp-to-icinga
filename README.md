@@ -62,6 +62,28 @@ traphandle default /usr/bin/python3 /home/user/Git/snmp-to-icinga/src/snmpicinga
 
 Once configured the script will load the config file and match the sender and OID to one of the configured values. If one can't be found the script exits. The SNMP payload is parsed according to the directives so that an OK, WARNING, CRITICAL, or UNKNOWN status can be sent to Icinga.
 
+### Test Mode
+
+For testing it is useful to run the script manually just to view output. This can be accomplished by redirecting output to the script for the pipe (`|`) command and running the script in test mode. As an example a test file could be created with observed SNMP values.
+
+```
+# save as test_snmp.txt
+device.local
+UDP: [192.168.1.100]:65534->[127.0.0.1]:162
+iso.3.6.1.2.1.2.2.1.8.25
+iso.3.6.1.2.1.2.2.1.8.25
+iso.3.6.1.2.1.2.2.1.8.25 1
+
+```
+
+This is then routed the script to simulate what happens during an actual trap. If the test data matches a trap in the config the results are printed to the screen instead of sent to Icinga.
+
+```bash
+
+cat test_snmp.txt | python3 src/snmpicinga.py -c config.yaml --test
+
+```
+
 ## Config File
 
 A YAML configuration file must be created that contains the Icinga and SNMP trap information. The script looks for config files in the `config` directory, specifying a different absolute path will not work. Multiple SNMP traps can be defined in the same file.

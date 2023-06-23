@@ -98,6 +98,8 @@ def load_config_file(config_file):
 parser = argparse.ArgumentParser(description='SNMP to Icinga')
 parser.add_argument('-c', '--config', default="config.yaml",
                     help='Path to YAML config file')
+parser.add_argument('-t', '--test', action="store_true",
+                    help="In test mode results are not sent to Icinga, printed to screen instead")
 parser.add_argument('-V', "--validate", action='store_true',
                     help="Validate the config file and exit")
 args = parser.parse_args()
@@ -146,7 +148,11 @@ if(trap_config is not None):
     else:
         trap_snmp['performance_data'] = ""
 
-    # send to icinga
-    send_to_icinga(trap_config['icinga']['host'], trap_config['icinga']['service'], trap_snmp)
+    # send to icinga if not in test mode
+    if(not args.test):
+        send_to_icinga(trap_config['icinga']['host'], trap_config['icinga']['service'], trap_snmp)
+    else:
+        print(f"Matched: {trap_config['name']}")
+        print(f"Exit Status: {trap_snmp['return_value']}, Plugin Output: {trap_snmp['plugin_output']}")
 else:
     print(f"No match for host {trap_snmp['sender_ip']} and OID {trap_snmp['oid']}")

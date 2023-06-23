@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## Unreleased
 
+### Added
+
+- Ability to run in test mode, which doesn't send results to Icinga. Repurposed `--test` flag.
+
 ### Changed
 
 - `--test` flag is not `--validate` to better identify it's function
