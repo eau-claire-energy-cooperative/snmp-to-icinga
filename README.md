@@ -78,7 +78,7 @@ iso.3.6.1.2.1.2.2.1.8.25 1
 
 This is then routed the script to simulate what happens during an actual trap. If the test data matches a trap in the config the results are printed to the screen instead of sent to Icinga.
 
-```bash
+```
 
 cat test_snmp.txt | python3 src/snmpicinga.py -c config.yaml --test
 
@@ -114,6 +114,8 @@ traps:
         warning: {{ payload | int == 2 }}
         critical: {{ payload | int == 3 }}
 ```
+
+Matching of OIDs can also include wildcard characters such that `iso.3.6.1.*` would match `iso.3.6.1.2` or `iso.3.6.1.5.2`. This is generally useful in cases where something like a switch interface may have a unique OID for each but you want to capture messages for any interface. Keep in mind that the traps are tested from the top down so use caution that that OIDs don't match in multiple places - only the first match will be used.
 
 The configuration file will be validated at runtime to make sure it is valid. You can confirm this manually by adding the `--validate` flag.
 

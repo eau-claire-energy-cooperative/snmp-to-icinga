@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 - Ability to run in test mode, which doesn't send results to Icinga. Repurposed `--test` flag.
 - Additional information exposed to the Jinja templates - `trap.host` contains the source host IP and `trap.oid` contains the matched OID
+- modified OID matching so that wildcards can be used using [fnmatch](https://docs.python.org/3/library/fnmatch.html)
 
 ### Changed
 

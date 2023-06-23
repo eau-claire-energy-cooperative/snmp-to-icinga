@@ -1,4 +1,5 @@
 import argparse
+import fnmatch
 import jinja2
 import json
 import os.path
@@ -59,7 +60,7 @@ def parse_payload(payload, type='value'):
 def find_trap_definition(trap_info, traps):
     # go through all the traps until we find a match
     for t in traps:
-        if(t['snmp']['host'] == trap_info['sender_ip'] and t['snmp']['oid'] == trap_info['oid']):
+        if(t['snmp']['host'] == trap_info['sender_ip'] and fnmatch.fnmatch(trap_info['oid'], t['snmp']['oid'])):
             return t
 
     return None
