@@ -133,7 +133,10 @@ The SNMP payload is just a text string by default. Trap parsing can help turn th
 
 Icinga expects a return code corresponding to either OK, WARNING, CRITICAL, or UNKNOWN. This is created by evaluating the SNMP payload. In the __return_codes__ section of the configuration file are specified the rules for evaluating each return type. These are processed in order from OK to CRITICAL. The OK type is required but WARNING and CRITICAL return types are optional. Using [Jinja syntax](https://jinja.palletsprojects.com/en/3.1.x/templates/) each statement must evaluate to a true/false value. Returning `True` means that this return value will be sent to Icinga. If no statement is found to be True, then an UNKNOWN return code is given.
 
-The SNMP payload is available as a variable called `payload`. For CSV type payloads you can access each with array notation (`payload[0]`). For JSON type payloads you can use dict notation (`payload['key']`).
+A few variables are available within the template for use in evaluating the return code.
+
+* `payload` - contains the SNMP payload as [defined above](#trap-parsing). For CSV type payloads you can access each with array notation (`payload[0]`). For JSON type payloads you can use dict notation (`payload['key']`).
+* `trap` - contains information about the trap. `trap.host` contains the source host IP and `trap.oid` contains the matched OID.
 
 A few examples:
 

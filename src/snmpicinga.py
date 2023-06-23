@@ -125,6 +125,7 @@ if(trap_config is not None):
 
     return_codes = trap_config['icinga']['return_code']
     jinja_env = jinja2.Environment()
+    jinja_env.globals = {"trap": {"host": trap_snmp['sender_ip'], "oid": trap_snmp['oid']}}
 
     # render return code starting with ok
     if(render_template(jinja_env, return_codes['ok'], parsed_payload)):
